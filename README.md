@@ -137,3 +137,24 @@ Workforce optimization problems in production systems require:
 - Transparent decision logic  
 
 This repository demonstrates those principles in a minimal but production-structured form.
+
+## Design Decisions
+
+### Why CP-SAT?
+
+CP-SAT (OR-Tools) handles mixed integer problems efficiently and supports complex constraints while remaining production-ready.
+
+### Why treat overtime as a soft constraint?
+
+Real-world systems cannot always strictly enforce maximum shifts. 
+By modeling overtime as a penalized variable, the model remains feasible while encoding business preferences in the objective.
+
+### Why add skill-based coverage?
+
+Operational scheduling often requires role or skill coverage, not just headcount. 
+A scalar skill constraint demonstrates how richer constraints can be layered without restructuring the solver.
+
+### Why keep the model small?
+
+The goal is clarity of formulation, not scale. 
+This repo demonstrates constraint modeling discipline and tradeoff thinking in a minimal but realistic form.
