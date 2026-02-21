@@ -7,12 +7,21 @@ from ortools.sat.python import cp_model
 
 @dataclass(frozen=True)
 class ToyProblem:
-    # Demand per time slot (e.g., 4 slots in a day)
+    # Demand per time slot (coverage requirement)
     demand: list[int]
+
+    # Minimum total skill required per slot
+    required_skill: list[int]
+
     # Cost per employee per slot worked
     cost_per_shift: list[int]
+
+    # Skill per employee (scalar)
+    skill_per_employee: list[int]
+
     # Target max shifts each employee should work (soft limit)
     max_shifts_per_employee: int
+
     # Penalty per overtime shift (beyond max_shifts_per_employee)
     overtime_penalty_per_shift: int = 50
 
@@ -28,6 +37,11 @@ def solve_toy(problem: ToyProblem) -> ToySolution:
     num_slots = len(problem.demand)
     num_employees = len(problem.cost_per_shift)
 
+    if len(problem.required_skill) != num_slots:
+        raise ValueError("required_skill must have the same length as demand")
+    if len(problem.skill_per_employee) != num_employees:
+        raise ValueError("skill_per_employee must have the same length as cost_per_shift")
+
     model = cp_model.CpModel()
 
     # x[e,t] = 1 if employee e works slot t
@@ -40,12 +54,18 @@ def solve_toy(problem: ToyProblem) -> ToySolution:
     for t in range(num_slots):
         model.Add(sum(x[(e, t)] for e in range(num_employees)) >= problem.demand[t])
 
+    # Skill coverage constraints: sum_e x[e,t] * skill[e] >= required_skill[t]
+    for t in range(num_slots):
+        model.Add(
+            sum(x[(e, t)] * problem.skill_per_employee[e] for e in range(num_employees))
+            >= problem.required_skill[t]
+        )
+
     # Soft max shifts constraint via overtime variables
     overtime: list[cp_model.IntVar] = []
     for e in range(num_employees):
         shifts_worked = sum(x[(e, t)] for t in range(num_slots))
         ot = model.NewIntVar(0, num_slots, f"overtime_e{e}")
-        # ot >= shifts_worked - max_shifts
         model.Add(ot >= shifts_worked - problem.max_shifts_per_employee)
         overtime.append(ot)
 
