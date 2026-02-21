@@ -11,15 +11,17 @@ class ToyProblem:
     demand: list[int]
     # Cost per employee per slot worked
     cost_per_shift: list[int]
-    # Max shifts each employee can work
+    # Target max shifts each employee should work (soft limit)
     max_shifts_per_employee: int
+    # Penalty per overtime shift (beyond max_shifts_per_employee)
+    overtime_penalty_per_shift: int = 50
 
 
 @dataclass(frozen=True)
 class ToySolution:
     total_cost: int
-    # assignments[e][t] in {0,1}
     assignments: list[list[int]]
+    overtime_by_employee: list[int]
 
 
 def solve_toy(problem: ToyProblem) -> ToySolution:
@@ -38,14 +40,21 @@ def solve_toy(problem: ToyProblem) -> ToySolution:
     for t in range(num_slots):
         model.Add(sum(x[(e, t)] for e in range(num_employees)) >= problem.demand[t])
 
-    # Max shifts per employee: sum_t x[e,t] <= max_shifts
+    # Soft max shifts constraint via overtime variables
+    overtime: list[cp_model.IntVar] = []
     for e in range(num_employees):
-        model.Add(sum(x[(e, t)] for t in range(num_slots)) <= problem.max_shifts_per_employee)
+        shifts_worked = sum(x[(e, t)] for t in range(num_slots))
+        ot = model.NewIntVar(0, num_slots, f"overtime_e{e}")
+        # ot >= shifts_worked - max_shifts
+        model.Add(ot >= shifts_worked - problem.max_shifts_per_employee)
+        overtime.append(ot)
 
-    # Objective: minimize cost
-    model.Minimize(
-        sum(x[(e, t)] * problem.cost_per_shift[e] for e in range(num_employees) for t in range(num_slots))
+    # Objective: base cost + overtime penalties
+    base_cost = sum(
+        x[(e, t)] * problem.cost_per_shift[e] for e in range(num_employees) for t in range(num_slots)
     )
+    overtime_cost = sum(ot * problem.overtime_penalty_per_shift for ot in overtime)
+    model.Minimize(base_cost + overtime_cost)
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = 5.0
@@ -59,5 +68,6 @@ def solve_toy(problem: ToyProblem) -> ToySolution:
         row = [int(solver.Value(x[(e, t)])) for t in range(num_slots)]
         assignments.append(row)
 
+    overtime_by_employee = [int(solver.Value(ot)) for ot in overtime]
     total_cost = int(solver.ObjectiveValue())
-    return ToySolution(total_cost=total_cost, assignments=assignments)
+    return ToySolution(total_cost=total_cost, assignments=assignments, overtime_by_employee=overtime_by_employee)
