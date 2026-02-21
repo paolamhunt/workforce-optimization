@@ -1,0 +1,5 @@
+ortools>=9.10
+
+[dev]
+pytest>=8.0
+ruff>=0.6

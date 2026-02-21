@@ -1,0 +1,11 @@
+LICENSE
+README.md
+pyproject.toml
+src/workforce_opt/__init__.py
+src/workforce_opt/toy_model.py
+src/workforce_optimization.egg-info/PKG-INFO
+src/workforce_optimization.egg-info/SOURCES.txt
+src/workforce_optimization.egg-info/dependency_links.txt
+src/workforce_optimization.egg-info/requires.txt
+src/workforce_optimization.egg-info/top_level.txt
+tests/test_toy_model.py
