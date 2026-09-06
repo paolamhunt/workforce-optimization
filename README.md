@@ -1,14 +1,21 @@
-# Workforce Optimization (Constraint-Based Scheduling)
+# Workforce Optimization with Constraint Programming
 
-A production-structured optimization project that converts demand requirements into a feasible, cost-minimizing staffing plan using OR-Tools (CP-SAT).
+A compact workforce scheduling model built with Google OR-Tools CP-SAT.
 
-This repository is intentionally designed to demonstrate senior applied data science capabilities:
+The project explores how staffing requirements, employee skills, workload limits, and labor costs can be represented as constraints and objectives in a discrete optimization problem.
 
-- Mathematical formulation of a decision problem  
-- Hard vs. soft constraints  
-- Cost tradeoff modeling  
-- Reproducible project structure  
-- Automated testing and CI  
+Rather than attempting to model an entire workforce-management platform, the implementation stays intentionally small so the relationship between business rules, mathematical constraints, and solver behavior remains easy to inspect.
+
+## What This Project Does
+
+- Assigns employees to staffing time slots
+- Enforces minimum headcount requirements
+- Enforces skill-based coverage requirements
+- Models workload targets with soft overtime constraints
+- Applies configurable penalties to overtime
+- Minimizes total staffing and overtime cost
+- Supports sensitivity analysis by changing penalty assumptions
+- Includes automated tests and CI
 
 ---
 
@@ -32,7 +39,7 @@ Minimize total staffing cost while meeting coverage requirements and penalizing 
 
 ---
 
-## Model Formulation (Toy Version)
+## Model Formulation
 
 ### Decision Variables
 
